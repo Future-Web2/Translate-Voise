@@ -1,0 +1,20 @@
+name: Checks
+on: [push, pull_request]
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: sudo apt-get update && sudo apt-get install -y ffmpeg
+      - run: pip install -r requirements.lock && pip install --no-deps -e . && pip install pytest pytest-asyncio ruff
+      - run: ruff check src tests docker-entrypoint.py
+      - run: pytest -q
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t voicebot-check .
+      - run: docker run --rm --entrypoint python voicebot-check -m voicebot --help
